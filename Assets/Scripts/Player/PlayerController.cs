@@ -9,6 +9,7 @@ public class PlayerController : NetworkBehaviour
     public int id = 0;
 
     GameObject playerObj;
+    GameObject cameraRoot;
     Rigidbody playerRb;
     PlayerAttack playerAttack;
     PlayerAttacked playerAttacked;
@@ -16,7 +17,13 @@ public class PlayerController : NetworkBehaviour
     PlayerSkill playerSkill;
     Camera playerCamera;
 
+    NetworkTransform networkTransform;
     NetworkAnimator networkAnimator;
+    private NetworkVariable<Quaternion> modelRotation = new NetworkVariable<Quaternion>(
+        Quaternion.identity,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
 
     [Space(10)]
     [SerializeField] float walkSpeed = 3.0f;
@@ -45,22 +52,28 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+        playerObj = transform.GetChild(0).gameObject;
+        cameraRoot = transform.Find("Camera Root").gameObject;
+
         if (IsOwner)
         {
-            playerCamera = Camera.main;
             playerRb = GetComponent<Rigidbody>();
-            playerObj = transform.GetChild(0).gameObject;
             playerAttack = playerObj.GetComponent<PlayerAttack>();
             playerAttacked = playerObj.GetComponent<PlayerAttacked>();
             playerSkill = playerObj.GetComponent<PlayerSkill>();
             playerInteract = transform.Find("Interact").GetComponent<PlayerInteract>();
+            playerCamera = cameraRoot.GetComponentInChildren<Camera>();
             networkAnimator = playerObj.GetComponent<NetworkAnimator>();
+
+            cameraRoot.SetActive(true);
 
             initialInputAction();
             RequestIdServerRpc();
         }
         else
         {
+            cameraRoot.SetActive(false);
+
             if (playerInput != null)
             {
                 playerInput.Disable();
@@ -80,6 +93,7 @@ public class PlayerController : NetworkBehaviour
     private void FixedUpdate()
     {
         handleMovement();
+        handleRotation();
     }
 
     private void handleMovement()
@@ -108,12 +122,6 @@ public class PlayerController : NetworkBehaviour
                     currentSpeed = walkSpeed;
                 currentSpeed = Mathf.MoveTowards(currentSpeed, runSpeed, acceleration * Time.fixedDeltaTime);
             }
-
-            // turn the player
-            _rotateY = transform.eulerAngles.y;
-            //float rotation = Mathf.SmoothDampAngle(_rotateY, Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg, ref _rotationVelocity, rotationSmoothTime);
-            float rotation = Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg;  // NOT SMOOTH
-            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         }
 
         Vector3 velocity = playerRb.velocity;
@@ -127,6 +135,24 @@ public class PlayerController : NetworkBehaviour
         SubmitTransformServerRpc(transform.position, transform.rotation);
 
         networkAnimator.Animator.SetFloat("Speed", currentSpeed);
+    }
+
+    private void handleRotation()
+    {
+        if (IsOwner)
+        {
+            Vector3 move = getMove(_rawInputMovement);
+            // turn the player
+            _rotateY = transform.eulerAngles.y;
+            //float rotation = Mathf.SmoothDampAngle(_rotateY, Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg, ref _rotationVelocity, rotationSmoothTime);
+            float rotation = Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg;  // NOT SMOOTH
+            playerObj.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            modelRotation.Value = playerObj.transform.rotation;
+        }
+        else
+        {
+            playerObj.transform.rotation = modelRotation.Value;
+        }
     }
 
     private bool _lastGrounded = false;
