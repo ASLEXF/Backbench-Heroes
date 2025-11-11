@@ -15,6 +15,7 @@ public class PlayerController : NetworkBehaviour
     PlayerAttacked playerAttacked;
     PlayerInteract playerInteract;
     PlayerSkill playerSkill;
+    PlayerRespawn playerRespawn;
     Camera playerCamera;
 
     NetworkTransform networkTransform;
@@ -62,11 +63,13 @@ public class PlayerController : NetworkBehaviour
             playerAttacked = playerObj.GetComponent<PlayerAttacked>();
             playerSkill = playerObj.GetComponent<PlayerSkill>();
             playerInteract = transform.Find("Interact").GetComponent<PlayerInteract>();
+            playerRespawn = transform.Find("Status").GetComponent<PlayerRespawn>();
             playerCamera = cameraRoot.GetComponentInChildren<Camera>();
             networkAnimator = playerObj.GetComponent<NetworkAnimator>();
 
             cameraRoot.SetActive(true);
 
+            playerRespawn.Respawn();
             initialInputAction();
             RequestIdServerRpc();
         }

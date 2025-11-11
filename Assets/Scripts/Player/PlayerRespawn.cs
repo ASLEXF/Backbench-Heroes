@@ -13,8 +13,15 @@ public class PlayerRespawn : MonoBehaviour
     private void Awake()
     {
         controller = transform.parent.GetComponent<PlayerController>();
+        SpawnPoint = GameObject.Find("Spawn Point").transform;
         //playerHealth = GetComponent<PlayerHealth>();
         //playerAttacked = transform.parent.GetChild(0).GetComponent<PlayerAttacked>();
+    }
+
+    private void Update()
+    {
+        if (transform.position.y < -10)
+            Respawn();
     }
 
     public void Respawn()
