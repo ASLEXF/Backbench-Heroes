@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/NGO+PlayerController.unity
     guid: 3cba317328ebca7438720861047fdd1a
+  - enabled: 1
+    path: Assets/Scenes/Level1.unity
+    guid: 8314f16a422b43b40b11625f495fb6db
   m_configObjects: {}
