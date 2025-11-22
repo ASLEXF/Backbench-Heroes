@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerHeightChecker : MonoBehaviour
@@ -10,8 +8,8 @@ public class PlayerHeightChecker : MonoBehaviour
 
     private void Awake()
     {
-        //playerHealth = transform.parent.GetComponentInChildren<PlayerHealth>();
-        playerRespawn = transform.parent.GetComponentInChildren<PlayerRespawn>();
+        //playerHealth = GetComponent<PlayerHealth>();
+        playerRespawn = GetComponent<PlayerRespawn>();
     }
 
     private void FixedUpdate()

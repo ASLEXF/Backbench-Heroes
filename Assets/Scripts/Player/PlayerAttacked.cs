@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerAttacked : NetworkBehaviour
+public class PlayerAttacked : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()

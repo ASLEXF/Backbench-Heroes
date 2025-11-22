@@ -3,28 +3,22 @@ using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : NetworkBehaviour
+public class PlayerController : MonoBehaviour
 {
     private static int PlayerId = 1;
     public int id = 0;
 
     GameObject playerObj;
     GameObject cameraRoot;
+
     Rigidbody playerRb;
     PlayerAttack playerAttack;
     PlayerAttacked playerAttacked;
     PlayerInteract playerInteract;
     PlayerSkill playerSkill;
     PlayerRespawn playerRespawn;
+    Animator animator;
     Camera playerCamera;
-
-    NetworkTransform networkTransform;
-    NetworkAnimator networkAnimator;
-    private NetworkVariable<Quaternion> modelRotation = new NetworkVariable<Quaternion>(
-        Quaternion.identity,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Owner
-    );
 
     [Space(10)]
     [SerializeField] float walkSpeed = 3.0f;
@@ -49,45 +43,30 @@ public class PlayerController : NetworkBehaviour
     private float _rotationVelocity;
     private float _rotateY;
 
-    public override void OnNetworkSpawn()
+    private void Awake()
     {
-        base.OnNetworkSpawn();
-
         playerObj = transform.GetChild(0).gameObject;
         cameraRoot = transform.Find("Camera Root").gameObject;
 
-        if (IsOwner)
-        {
-            playerRb = GetComponent<Rigidbody>();
-            playerAttack = playerObj.GetComponent<PlayerAttack>();
-            playerAttacked = playerObj.GetComponent<PlayerAttacked>();
-            playerSkill = playerObj.GetComponent<PlayerSkill>();
-            playerInteract = transform.Find("Interact").GetComponent<PlayerInteract>();
-            playerRespawn = transform.Find("Status").GetComponent<PlayerRespawn>();
-            playerCamera = cameraRoot.GetComponentInChildren<Camera>();
-            networkAnimator = playerObj.GetComponent<NetworkAnimator>();
+        playerRb = GetComponent<Rigidbody>();
+        playerAttack = playerObj.GetComponent<PlayerAttack>();
+        playerAttacked = playerObj.GetComponent<PlayerAttacked>();
+        playerSkill = playerObj.GetComponent<PlayerSkill>();
+        playerInteract = transform.Find("Interact").GetComponent<PlayerInteract>();
+        playerRespawn = transform.Find("Status").GetComponent<PlayerRespawn>();
+        playerCamera = cameraRoot.GetComponentInChildren<Camera>();
+        animator = playerObj.GetComponent<Animator>();
+    }
 
-            cameraRoot.SetActive(true);
-
-            playerRespawn.Respawn();
-            initialInputAction();
-            RequestIdServerRpc();
-        }
-        else
-        {
-            cameraRoot.SetActive(false);
-
-            if (playerInput != null)
-            {
-                playerInput.Disable();
-            }
-        }
+    private void Start()
+    {
+        playerRespawn.Respawn();
+        cameraRoot.SetActive(true);
+        initialInputAction();
     }
 
     private void Update()
     {
-        if (!IsOwner) return;
-
         GroundedCheck();
 
         playerVelocity = playerRb.velocity;
@@ -101,8 +80,6 @@ public class PlayerController : NetworkBehaviour
 
     private void handleMovement()
     {
-        if (!IsOwner) return;
-
         //move = (transform.right * _rawInputMovement.x + transform.forward * _rawInputMovement.y).normalized;
         Vector3 move = getMove(_rawInputMovement);
 
@@ -137,25 +114,17 @@ public class PlayerController : NetworkBehaviour
 
         SubmitTransformServerRpc(transform.position, transform.rotation);
 
-        networkAnimator.Animator.SetFloat("Speed", currentSpeed);
+        animator.SetFloat("Speed", currentSpeed);
     }
 
     private void handleRotation()
     {
-        if (IsOwner)
-        {
-            Vector3 move = getMove(_rawInputMovement);
-            // turn the player
-            _rotateY = transform.eulerAngles.y;
-            //float rotation = Mathf.SmoothDampAngle(_rotateY, Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg, ref _rotationVelocity, rotationSmoothTime);
-            float rotation = Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg;  // NOT SMOOTH
-            playerObj.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
-            modelRotation.Value = playerObj.transform.rotation;
-        }
-        else
-        {
-            playerObj.transform.rotation = modelRotation.Value;
-        }
+        Vector3 move = getMove(_rawInputMovement);
+        // turn the player
+        _rotateY = transform.eulerAngles.y;
+        //float rotation = Mathf.SmoothDampAngle(_rotateY, Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg, ref _rotationVelocity, rotationSmoothTime);
+        float rotation = Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg;  // NOT SMOOTH
+        playerObj.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
     }
 
     private bool _lastGrounded = false;
@@ -167,7 +136,7 @@ public class PlayerController : NetworkBehaviour
             QueryTriggerInteraction.Ignore);
         if (Grounded != _lastGrounded)
         {
-            networkAnimator.Animator.SetBool("IsGrounded", Grounded);
+            animator.SetBool("IsGrounded", Grounded);
             _lastGrounded = Grounded;
         }
 
@@ -248,13 +217,11 @@ public class PlayerController : NetworkBehaviour
 
     void handleAction(InputAction.CallbackContext context)
     {
-        if (!IsOwner) return;
-
         switch (context.action.name)
         {
             case "Move":
                 _rawInputMovement = context.ReadValue<Vector2>();
-                networkAnimator.Animator.SetBool("IsWalking", context.performed);
+                animator.SetBool("IsWalking", context.performed);
                 break;
             case "Run":
                 _isRunning = true; // context.performed;
@@ -263,7 +230,7 @@ public class PlayerController : NetworkBehaviour
                 if (Grounded) // && context.canceled)
                 {
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * gravity);
-                    networkAnimator.SetTrigger("Jump");
+                    animator.SetTrigger("Jump");
                 }
                 break;
             case "Attack":

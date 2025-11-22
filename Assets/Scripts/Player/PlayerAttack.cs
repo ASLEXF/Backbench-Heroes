@@ -5,11 +5,10 @@ using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerAttack : NetworkBehaviour
+public class PlayerAttack : MonoBehaviour
 {
     Animator animator = null!;
     PlayerAttacked playerAttacked = null!;
-    NetworkAnimator networkAnimator;
     //HandLSlot handLSlot = null!;
     //HandRSlot handRSlot = null!;
 
@@ -17,7 +16,6 @@ public class PlayerAttack : NetworkBehaviour
     {
         animator = GetComponent<Animator>();
         playerAttacked = GetComponent<PlayerAttacked>();
-        networkAnimator = GetComponent<NetworkAnimator>();
     }
 
     //public void Initialize()
@@ -33,6 +31,6 @@ public class PlayerAttack : NetworkBehaviour
         if (!context.started) return;
         //if (handRSlot.GetCurrentWeaponObj() == null) return;
 
-        networkAnimator.SetTrigger("Attack");
+        animator.SetTrigger("Attack");
     }
 }

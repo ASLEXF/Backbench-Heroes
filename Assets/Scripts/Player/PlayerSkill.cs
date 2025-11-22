@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerSkill : NetworkBehaviour
+public class PlayerSkill : MonoBehaviour
 {
     PlayerController controller;
 
