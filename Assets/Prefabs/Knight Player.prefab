@@ -284,8 +284,8 @@ GameObject:
   - component: {fileID: 1715562317567332306}
   - component: {fileID: 2602040096959011942}
   - component: {fileID: 2116769461770115195}
-  - component: {fileID: 7274553988025526038}
   - component: {fileID: 2949222800150079847}
+  - component: {fileID: 7274553988025526038}
   - component: {fileID: 1566691025763103173}
   m_Layer: 0
   m_Name: Knight Player
@@ -396,6 +396,27 @@ MonoBehaviour:
   m_DefaultActionMap: InGame
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &2949222800150079847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2902840521364663522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1885437012
+  InScenePlacedSourceGlobalObjectIdHash: 1885437012
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!114 &7274553988025526038
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -424,27 +445,6 @@ MonoBehaviour:
     m_Bits: 8
   GroundedOffset: -0.14
   GroundedRadius: 0.28
---- !u!114 &2949222800150079847
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2902840521364663522}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 172617800
-  InScenePlacedSourceGlobalObjectIdHash: 1885437012
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
 --- !u!114 &1566691025763103173
 MonoBehaviour:
   m_ObjectHideFlags: 0
