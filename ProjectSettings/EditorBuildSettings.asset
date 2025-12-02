@@ -6,9 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/NGO+PlayerController.unity
-    guid: 3cba317328ebca7438720861047fdd1a
-  - enabled: 1
     path: Assets/Scenes/Level1.unity
     guid: 8314f16a422b43b40b11625f495fb6db
-  m_configObjects: {}
+  - enabled: 1
+    path: Assets/Scenes/TestScenes/NGO+PlayerController.unity
+    guid: 3cba317328ebca7438720861047fdd1a
+  - enabled: 1
+    path: Assets/Scenes/TestScenes/TestController.unity
+    guid: 6749934125460be4db5812ff297e4f9f
+  - enabled: 1
+    path: Assets/Scenes/TestScenes/TestLevel1.unity
+    guid: 82285a9e34a43d443a62f51402e7ee7c
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: c10549415c99f904cbfb0fda0619dee1,
+      type: 3}

@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
     private static int PlayerId = 1;
     public int id = 0;
 
-    GameObject playerObj;
+    public GameObject playerObj { get; private set; }
     GameObject cameraRoot;
 
     public Rigidbody rb { get; private set; }
@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour
     {
         playerRespawn.Respawn();
         cameraRoot.SetActive(true);
-        initialInputAction();
+        BindInputAction();
     }
 
     private void Update()
@@ -134,7 +134,7 @@ public class PlayerController : MonoBehaviour
 
     private bool _lastGrounded = false;
 
-    private void GroundedCheck()
+    public void GroundedCheck()
     {
         Vector3 spherePosition = transform.position + Vector3.down * GroundedOffset;
         Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
@@ -192,7 +192,7 @@ public class PlayerController : MonoBehaviour
 
     bool _isRunning = false;
 
-    void initialInputAction()
+    public void BindInputAction()
     {
         playerInputs = new PlayerInputs();
 
