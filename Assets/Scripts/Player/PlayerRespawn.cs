@@ -13,8 +13,6 @@ public class PlayerRespawn : MonoBehaviour
     private void Awake()
     {
         controller = transform.parent.GetComponent<PlayerController>();
-        if (SpawnPoint == null)
-            SpawnPoint = GameObject.Find("Spawn Point").transform;
         //playerHealth = GetComponent<PlayerHealth>();
         //playerAttacked = transform.parent.GetChild(0).GetComponent<PlayerAttacked>();
     }
@@ -25,10 +23,18 @@ public class PlayerRespawn : MonoBehaviour
             Respawn();
     }
 
+    private void OnEnable()
+    {
+        //if (SpawnPoint == null)
+        //    SpawnPoint = GameObject.Find("Spawn Point").transform;
+    }
+
     public void Respawn()
     {
-        // find the nearest enabled spawn point
+        if (SpawnPoint == null)
+            return;
 
+        // find the nearest enabled spawn point
 
         controller.MoveTo(SpawnPoint.position);
         //controller.Respawn();

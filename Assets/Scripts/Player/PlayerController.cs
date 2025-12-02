@@ -11,14 +11,17 @@ public class PlayerController : MonoBehaviour
     GameObject playerObj;
     GameObject cameraRoot;
 
-    Rigidbody playerRb;
+    public Rigidbody rb { get; private set; }
     PlayerAttack playerAttack;
     PlayerAttacked playerAttacked;
     PlayerInteract playerInteract;
     PlayerSkill playerSkill;
     PlayerRespawn playerRespawn;
-    Animator animator;
-    Camera playerCamera;
+    public Animator animator { get; private set; }
+    public Camera playerCamera { get; private set; }
+    PlayerRopeStatus playerRopeStatus;
+
+    public PlayerType playerType;
 
     [Space(10)]
     [SerializeField] float walkSpeed = 3.0f;
@@ -33,7 +36,7 @@ public class PlayerController : MonoBehaviour
     [Space(10)]
     [SerializeField] float gravity = -19.0f;
     [SerializeField] float JumpHeight = 4.0f;
-    [SerializeField] bool Grounded = false;
+    public bool Grounded = false;
     [SerializeField] LayerMask GroundLayers;
     [SerializeField] float GroundedOffset = -0.14f;
     [SerializeField] float GroundedRadius = 0.28f;
@@ -48,7 +51,8 @@ public class PlayerController : MonoBehaviour
         playerObj = transform.GetChild(0).gameObject;
         cameraRoot = transform.Find("Camera Root").gameObject;
 
-        playerRb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
+        playerInput = GetComponent<PlayerInput>();
         playerAttack = playerObj.GetComponent<PlayerAttack>();
         playerAttacked = playerObj.GetComponent<PlayerAttacked>();
         playerSkill = playerObj.GetComponent<PlayerSkill>();
@@ -56,6 +60,7 @@ public class PlayerController : MonoBehaviour
         playerRespawn = transform.Find("Status").GetComponent<PlayerRespawn>();
         playerCamera = cameraRoot.GetComponentInChildren<Camera>();
         animator = playerObj.GetComponent<Animator>();
+        playerRopeStatus = transform.Find("Status").GetComponent<PlayerRopeStatus>();
     }
 
     private void Start()
@@ -69,7 +74,7 @@ public class PlayerController : MonoBehaviour
     {
         GroundedCheck();
 
-        playerVelocity = playerRb.velocity;
+        playerVelocity = rb.velocity;
     }
 
     private void FixedUpdate()
@@ -104,15 +109,13 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        Vector3 velocity = playerRb.velocity;
+        Vector3 velocity = rb.velocity;
         Vector3 horizontal = (move * (Grounded ? currentSpeed : inAirSpeed));
         velocity.x = horizontal.x;
         velocity.y = _verticalVelocity;
         velocity.z = horizontal.z;
 
-        playerRb.velocity = velocity;
-
-        SubmitTransformServerRpc(transform.position, transform.rotation);
+        rb.velocity = velocity;
 
         animator.SetFloat("Speed", currentSpeed);
     }
@@ -120,6 +123,8 @@ public class PlayerController : MonoBehaviour
     private void handleRotation()
     {
         Vector3 move = getMove(_rawInputMovement);
+        if (move == Vector3.zero)
+            return;
         // turn the player
         _rotateY = transform.eulerAngles.y;
         //float rotation = Mathf.SmoothDampAngle(_rotateY, Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg, ref _rotationVelocity, rotationSmoothTime);
@@ -165,19 +170,15 @@ public class PlayerController : MonoBehaviour
         transform.position = position;
     }
 
-    #region RPC
+    #region quick accessors
 
-    [ServerRpc]
-    private void SubmitTransformServerRpc(Vector3 position, Quaternion rotation)
-    {
-        transform.position = position;
-        transform.rotation = rotation;
-    }
+    CapsuleCollider capsuleCollider;
 
-    [ServerRpc]
-    private void RequestIdServerRpc(ServerRpcParams rpcParams = default)
+    public float radius { get; private set; }
+
+    private void initializeQuickAccessors()
     {
-        id = PlayerController.PlayerId++;
+        radius = capsuleCollider.radius;
     }
 
     #endregion
@@ -185,30 +186,31 @@ public class PlayerController : MonoBehaviour
     #region Input System
 
     //InputAction move, run, attack, block, interact;
-    private Player playerInput;
+    public PlayerInput playerInput;
+    public PlayerInputs playerInputs;
     Vector2 _rawInputMovement;
 
     bool _isRunning = false;
 
     void initialInputAction()
     {
-        playerInput = new Player();
+        playerInputs = new PlayerInputs();
 
         // use rebind manager here if players can rebind their key bindings
         if (PlayerId < 4)
         {
-            playerInput.InGame.Move.started += handleAction;
-            playerInput.InGame.Move.performed += handleAction;
-            playerInput.InGame.Move.canceled += handleAction;
-            playerInput.InGame.Run.performed += handleAction;
-            playerInput.InGame.Jump.canceled += handleAction;
-            playerInput.InGame.Attack.started += handleAction;
-            playerInput.InGame.Skill.started += handleAction;
-            playerInput.InGame.Skill.performed += handleAction;
-            playerInput.InGame.Skill.canceled += handleAction;
-            playerInput.InGame.Interact.started += handleAction;
+            playerInputs.InGame.Move.started += handleAction;
+            playerInputs.InGame.Move.performed += handleAction;
+            playerInputs.InGame.Move.canceled += handleAction;
+            playerInputs.InGame.Run.performed += handleAction;
+            playerInputs.InGame.Jump.started += handleAction;
+            playerInputs.InGame.Attack.started += handleAction;
+            playerInputs.InGame.Skill.started += handleAction;
+            playerInputs.InGame.Skill.performed += handleAction;
+            playerInputs.InGame.Skill.canceled += handleAction;
+            playerInputs.InGame.Interact.started += handleAction;
 
-            playerInput.Enable();
+            playerInputs.InGame.Enable();
         }
         else
             Debug.LogError($"wrong player input initialization: id={PlayerId}.");
@@ -246,6 +248,22 @@ public class PlayerController : MonoBehaviour
                 Debug.LogWarning($"undefined action {context.action.name}!");
                 break;
         }
+    }
+
+    public void UnbindInputActions()
+    {
+        playerInputs.InGame.Move.started -= handleAction;
+        playerInputs.InGame.Move.performed -= handleAction;
+        playerInputs.InGame.Move.canceled -= handleAction;
+        playerInputs.InGame.Run.performed -= handleAction;
+        playerInputs.InGame.Jump.canceled -= handleAction;
+        playerInputs.InGame.Attack.started -= handleAction;
+        playerInputs.InGame.Skill.started -= handleAction;
+        playerInputs.InGame.Skill.performed -= handleAction;
+        playerInputs.InGame.Skill.canceled -= handleAction;
+        playerInputs.InGame.Interact.started -= handleAction;
+
+        playerInputs.InGame.Disable();
     }
 
     #endregion

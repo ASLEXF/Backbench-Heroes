@@ -14,5 +14,6 @@ public class PlayerFollower : MonoBehaviour
     private void Update()
     {
         transform.position = playerOBJTransform.transform.position;
+        transform.rotation = playerOBJTransform.transform.rotation;
     }
 }

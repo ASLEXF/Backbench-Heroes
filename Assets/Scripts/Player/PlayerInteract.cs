@@ -1,23 +1,26 @@
-# nullable enable
-
+using Rope;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerInteract : MonoBehaviour
 {
+    PlayerController playerController = null!;
     Animator animator = null!;
-    GameObject charactorObj = null!;
+    PlayerRopeController playerRopeController = null!;
+    PlayerRopeStatus playerRopeStatus;
     //HandLSlot handLSlot = null!;
     //HandRSlot handRSlot = null!;
 
-    [SerializeField] private List<Interactable> interactableItems = null!;
-    [SerializeField] private Interactable? currentInteract;
+    [SerializeField] private List<Interactable> interactableItems = new List<Interactable>();
+    [SerializeField] private Interactable currentInteract;
 
     private void Awake()
     {
-        animator = transform.parent.GetComponent<Animator>();
-        charactorObj = transform.parent.gameObject;
+        playerController = transform.parent.GetComponent<PlayerController>();
+        animator = transform.parent.GetComponentInChildren<Animator>();
+        playerRopeController = transform.parent.GetComponent<PlayerRopeController>();
+        playerRopeStatus = transform.parent.Find("Status").GetComponent<PlayerRopeStatus>();
     }
 
     //public void Initialize()
@@ -26,40 +29,62 @@ public class PlayerInteract : MonoBehaviour
     //    handRSlot = GetComponentInParent<QuickRefer>().handRSlot;
     //}
 
-    private void Update()
+    private void OnEnable()
     {
-        // find the nearest item
+        OnUpdateInteractableItems += updateInteractableItems;
+    }
+
+    private void OnDisable()
+    {
+        OnUpdateInteractableItems -= updateInteractableItems;
     }
 
     public void Interact(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-
-        
-    }
-
-    private void OnTriggerEnter(Collider collider)
-    {
-        //Debug.Log($"{collider.transform.root.gameObject.name}");
-        if (collider.gameObject.CompareTag("Interactable"))
+        if (currentInteract == null) return;
+        if (playerRopeStatus.ropeStatus == RopeStatus.ConnectedWithClimbAttacher)
         {
-            Interactable? interactable = collider.gameObject.GetComponent<Interactable>();
-            interactableItems.Add(interactable);
+            playerRopeController.StartClimbing();
+        }
+        else
+        {
+            currentInteract.Interact(playerController);
         }
     }
 
-    private void OnTriggerStay(Collider collider)
+    public void TryAddInteractable(Interactable item)
     {
-        // handle drop items that are added instantly in the interact range
-        
-    }
-
-    private void OnTriggerExit(Collider collider)
-    {
-        if (collider.gameObject.CompareTag("Interactable"))
+        if (!interactableItems.Contains(item))
         {
-            Interactable? interactable = collider.gameObject.GetComponent<Interactable>();
-            interactableItems.Remove(interactable);
+            interactableItems.Add(item);
+            OnUpdateInteractableItems?.Invoke();
         }
     }
+
+    public void TryRemoveInteractable(Interactable item)
+    {
+        if (interactableItems.Contains(item))
+        {
+            interactableItems.Remove(item);
+            OnUpdateInteractableItems?.Invoke();
+        }
+    }
+
+    #region Events
+
+    event System.Action OnUpdateInteractableItems;
+
+    private void updateInteractableItems()
+    {
+        if (interactableItems.Count == 0) return;
+        if (interactableItems.Count == 1)
+        {
+            currentInteract = interactableItems[0];
+            return;
+        }
+        // find the nearest item
+    }
+
+    #endregion
 }
